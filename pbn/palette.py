@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-from collections import Counter
 from pathlib import Path
 
 import numpy as np
@@ -39,10 +38,10 @@ def hex_rgb(h: str) -> tuple[int, int, int]:
     return tuple(int(h[i:i + 2], 16) for i in (1, 3, 5))
 
 
-def load_palette(path: Path) -> list[dict]:
-    """Selection JSON -> entries with lab, L and nr = painting order by lightness
+def palette_from_entries(entries: list[dict]) -> list[dict]:
+    """Selection entries -> entries with lab, L and nr = painting order by lightness
     (1 = lightest). Paper white is appended as nr 0 (left blank)."""
-    pal = [dict(code=c["code"], name=c["name"], hex=c["hex"].lower()) for c in json.loads(Path(path).read_text(encoding="utf-8"))]
+    pal = [dict(code=c["code"], name=c["name"], hex=c["hex"].lower()) for c in entries]
     for e in pal:
         e["lab"] = srgb_to_lab(hex_rgb(e["hex"]))
         e["L"] = float(e["lab"][0])
@@ -51,6 +50,10 @@ def load_palette(path: Path) -> list[dict]:
     white = srgb_to_lab((255, 255, 255))
     pal.append(dict(code="", name="paper white (leave blank)", hex="#ffffff", lab=white, L=float(white[0]), nr=0))
     return pal
+
+
+def load_palette(path: Path) -> list[dict]:
+    return palette_from_entries(json.loads(Path(path).read_text(encoding="utf-8")))
 
 
 def _pick(src_lab, w, cand_lab, k, fixed=(), iters=50) -> list[int]:
@@ -75,21 +78,34 @@ def _pick(src_lab, w, cand_lab, k, fixed=(), iters=50) -> list[int]:
     return chosen
 
 
-def pick(image: Path, inventory: Path, k: int, fixed_codes=(), out: Path | None = None) -> list[dict]:
-    """Choose the k inventory colours that best cover the image (weights = sqrt of pixel count,
-    so small accents like stars survive). fixed_codes are always included."""
-    px = np.asarray(Image.open(image).convert("RGB")).reshape(-1, 3)
-    hist = Counter(map(tuple, px))
-    if len(hist) > 4096:  # photo: bin to 4 bits per channel
-        hist = Counter(map(tuple, (px // 16) * 16 + 8))
-    colors = np.array(list(hist))
-    w = np.sqrt(np.array(list(hist.values()), dtype=float) + 1)
-    inv = json.loads(Path(inventory).read_text(encoding="utf-8"))
+def _histogram(px: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Distinct colours of N×3 uint8 pixels and their counts."""
+    key = (px[:, 0].astype(np.int32) << 16) | (px[:, 1].astype(np.int32) << 8) | px[:, 2]
+    u, counts = np.unique(key, return_counts=True)
+    return np.stack([u >> 16, (u >> 8) & 255, u & 255], axis=1), counts
+
+
+def pick_entries(px: np.ndarray, inv: list[dict], k: int, fixed_codes=()) -> list[dict]:
+    """Choose the k inventory entries that best cover the pixels (N×3 uint8; weights = sqrt of
+    pixel count, so small accents like stars survive). fixed_codes are always included."""
+    colors, counts = _histogram(px)
+    if len(colors) > 4096:  # photo: bin to 4 bits per channel
+        colors, counts = _histogram((px // 16) * 16 + 8)
+    w = np.sqrt(counts + 1.0)
     codes = [c["code"] for c in inv]
     missing = [c for c in fixed_codes if c not in codes]
-    assert not missing, f"not in {inventory.name}: {missing}"
+    if missing:
+        raise ValueError(f"not in the inventory: {missing}")
+    if not len(fixed_codes) <= k <= len(inv):
+        raise ValueError(f"k must be between {len(fixed_codes)} and {len(inv)}")
     chosen = _pick(srgb_to_lab(colors), w, srgb_to_lab([c["rgb"] for c in inv]), k, [codes.index(c) for c in fixed_codes])
-    sel = [inv[i] for i in chosen]
+    return [inv[i] for i in chosen]
+
+
+def pick(image: Path, inventory: Path, k: int, fixed_codes=(), out: Path | None = None) -> list[dict]:
+    """Choose the k inventory colours that best cover the image, see pick_entries."""
+    px = np.asarray(Image.open(image).convert("RGB")).reshape(-1, 3)
+    sel = pick_entries(px, json.loads(Path(inventory).read_text(encoding="utf-8")), k, fixed_codes)
     if out:
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(sel, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
