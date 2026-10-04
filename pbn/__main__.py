@@ -19,7 +19,8 @@ def main() -> None:
 
     r = sub.add_parser("run", help="run pipeline steps (default: all)")
     r.add_argument("project", type=Path, help="project TOML")
-    r.add_argument("steps", nargs="*", choices=list(STEPS), metavar="step", help=f"any of: {', '.join(STEPS)}")
+    # no `choices` here: Python < 3.12 checks the empty default against them and fails
+    r.add_argument("steps", nargs="*", metavar="step", help=f"any of: {', '.join(STEPS)}")
     r.add_argument("--from", dest="start", choices=list(STEPS), help="run from this step to the end")
 
     k = sub.add_parser("pick", help="choose K colours from an inventory for the prepared source")
@@ -53,6 +54,8 @@ def main() -> None:
     g.add_argument("-o", "--out", type=Path, help="output PNG (default: the palette file with .png)")
 
     a = ap.parse_args()
+    if a.cmd == "run" and (bad := [s for s in a.steps if s not in STEPS]):
+        r.error(f"invalid step(s): {', '.join(bad)} (choose from {', '.join(STEPS)})")
     if a.cmd == "run":
         p = Project(a.project)
         names = list(STEPS)

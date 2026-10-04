@@ -3,7 +3,11 @@
 - distance in Lab: dL² + chroma_weight·(da² + db²)
 - optional dark boost for photos: near-black, near-neutral pixels get more chroma and
   lightness spread, so dark brush strokes get their own colours instead of one black blob
-- noise removal: 3×3 majority filter (2×) + morphological opening per class
+- edge-aware smoothing (filter_mm > 0): cost-volume filtering – the cost of every palette
+  colour is smoothed with a guided filter whose guide is the picture itself (Lab), then each
+  pixel takes the cheapest colour. Texture and noise average out, real edges stay sharp, so
+  regions follow the picture's edges instead of pixel noise.
+- filter_mm = 0: the old noise removal, 3×3 majority filter (2×) + opening per class
 Output: out/labels.png (pixel = palette nr), out/palette.json, out/quantized_compare.png
 """
 from __future__ import annotations
@@ -46,17 +50,56 @@ def morph_open(idx: np.ndarray, n: int) -> np.ndarray:
     return out
 
 
-def assign(lab: np.ndarray, palette: list[dict], q: dict) -> np.ndarray:
+def features(lab: np.ndarray, q: dict, boost: bool = True) -> np.ndarray:
+    """Lab -> space where the Euclidean distance is the quantize distance. The dark boost
+    applies to picture pixels only (boost=False for palette colours)."""
+    f = boost_dark(lab, q) if boost else np.array(lab, np.float64)
+    f[..., 1:] *= np.sqrt(q["chroma_weight"])
+    return f
+
+
+class GuidedFilter:
+    """Guided filter (He et al. 2010) with a colour guide; the guide's statistics are computed
+    once, then any number of single-channel inputs can be filtered against it."""
+
+    def __init__(self, guide: np.ndarray, r: int, eps: float):
+        self.I, self.r = guide.astype(np.float32), r
+        self.mI = self.box(self.I)
+        cov = self.box(self.I[..., :, None] * self.I[..., None, :]) - self.mI[..., :, None] * self.mI[..., None, :]
+        self.inv = np.linalg.inv(cov + eps * np.eye(3, dtype=np.float32))
+
+    def box(self, a: np.ndarray) -> np.ndarray:
+        size = (2 * self.r + 1,) * 2 + (1,) * (a.ndim - 2)
+        return ndimage.uniform_filter(a, size, mode="nearest")
+
+    def __call__(self, p: np.ndarray) -> np.ndarray:
+        p = p.astype(np.float32)
+        mp = self.box(p)
+        a = np.einsum("...ij,...j->...i", self.inv, self.box(self.I * p[..., None]) - self.mI * mp[..., None])
+        b = mp - (a * self.mI).sum(-1)
+        return (self.box(a) * self.I).sum(-1) + self.box(b)
+
+
+def assign(lab: np.ndarray, palette: list[dict], q: dict, mm_per_px: float) -> np.ndarray:
     """Lab image + palette (from palette_from_entries) -> palette index per pixel, denoised."""
-    lab_q = boost_dark(lab, q)
-    pal_lab = np.array([e["lab"] for e in palette])
-    dist = np.empty((*lab.shape[:2], len(palette)))
+    f = features(lab, q)
+    pal_f = features(np.array([e["lab"] for e in palette]), q, boost=False)
+    cost = np.empty((*lab.shape[:2], len(palette)), np.float32)
+    banned = np.zeros(cost.shape, bool)
     for j, e in enumerate(palette):
-        dL, da, db = (lab_q[..., c] - pal_lab[j, c] for c in range(3))
-        dist[..., j] = dL * dL + q["chroma_weight"] * (da * da + db * db)
+        cost[..., j] = np.sqrt(((f - pal_f[j]) ** 2).sum(-1))  # ΔE-like: keeps small accents (squared -> mean colour)
         if e["code"] in q["dark_only"]:
-            dist[..., j][lab[..., 0] >= q["dark_l"]] = np.inf
-    return morph_open(majority_filter(dist.argmin(axis=-1)), len(palette))
+            banned[..., j] = lab[..., 0] >= q["dark_l"]
+    r = round(q["filter_mm"] / mm_per_px)
+    if r < 1:
+        cost[banned] = np.inf
+        return morph_open(majority_filter(cost.argmin(axis=-1)), len(palette))
+    cost[banned] = 200.0  # finite while filtering, so the ban doesn't bleed into allowed pixels
+    gf = GuidedFilter(f / 100.0, r, q["filter_eps"])
+    for j in range(len(palette)):
+        cost[..., j] = gf(cost[..., j])
+    cost[banned] = np.inf
+    return cost.argmin(axis=-1)
 
 
 def stats(lab: np.ndarray, idx: np.ndarray, palette: list[dict], mm2_per_px: float) -> list[dict]:
@@ -74,10 +117,11 @@ def stats(lab: np.ndarray, idx: np.ndarray, palette: list[dict], mm2_per_px: flo
 
 def run(p) -> None:
     img = np.asarray(Image.open(p.out / "source.png").convert("RGB"))
-    mm2_per_px = p.geometry(img.shape[1], img.shape[0])["mm_per_px"] ** 2
+    mm_per_px = p.geometry(img.shape[1], img.shape[0])["mm_per_px"]
+    mm2_per_px = mm_per_px ** 2
     lab = srgb_to_lab(img)
     palette = load_palette(p.palette_path)
-    idx = assign(lab, palette, p.q)
+    idx = assign(lab, palette, p.q, mm_per_px)
 
     nr_of = np.array([e["nr"] for e in palette], np.uint8)
     Image.fromarray(nr_of[idx]).save(p.out / "labels.png")
