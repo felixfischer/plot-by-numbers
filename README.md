@@ -162,6 +162,7 @@ python -m pbn calib  PROJECT.toml                            out/calib-test.hpgl
 python -m pbn send   FILE.hpgl PORT [--baud 9600]
 python -m pbn swatch INVENTORY.json [-o OUT.pdf] [--bw]      A4 swatch card
 python -m pbn web    [--root DIR] [--port 8000] [--open]     browser app (needs starlette, uvicorn)
+python -m pbn png    PALETTE.json [-o OUT.png]               palette as PNG strip (1 px per colour)
 ```
 
 | Step | Does | Writes to `out/` |
@@ -254,6 +255,9 @@ A selection (a project's `palette`) has the same format and lists only the colou
   card with the digital colour next to an empty field. Paint a real stroke into each field.
   The hex values are taken from manufacturer charts and are only approximations of the
   real ink.
+- **Export as PNG:** `python -m pbn png palettes/copic-sketch.json` writes a one-pixel-high
+  strip, one pixel per colour, for tools that take a palette as an image. Up to 256 colours
+  it is an indexed PNG whose colour table is the palette; more colours fall back to RGB.
 - **Add your own:** any product line works. Codes can use digits and the letters
   `B C E F G N R T V W Y`. Add glyphs to [`pbn/font.py`](pbn/font.py) if you need more.
 

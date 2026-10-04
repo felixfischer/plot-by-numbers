@@ -5,7 +5,7 @@ import argparse
 import time
 from pathlib import Path
 
-from . import hpgl, layout, prepare, quantize, segment, swatch, vectorize
+from . import hpgl, layout, palette_png, prepare, quantize, segment, swatch, vectorize
 from .config import Project
 from .palette import pick
 
@@ -48,6 +48,10 @@ def main() -> None:
     b.add_argument("--port", type=int, default=8000)
     b.add_argument("--open", action="store_true", help="open the browser")
 
+    g = sub.add_parser("png", help="palette JSON -> PNG strip (one pixel per colour)")
+    g.add_argument("palette", type=Path)
+    g.add_argument("-o", "--out", type=Path, help="output PNG (default: the palette file with .png)")
+
     a = ap.parse_args()
     if a.cmd == "run":
         p = Project(a.project)
@@ -71,6 +75,8 @@ def main() -> None:
     elif a.cmd == "web":
         from .web.app import serve  # starlette/uvicorn only needed here
         serve(a.root, a.host, a.port, a.open)
+    elif a.cmd == "png":
+        palette_png.run(a.palette, a.out)
 
 
 if __name__ == "__main__":
