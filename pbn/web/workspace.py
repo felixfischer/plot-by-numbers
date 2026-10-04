@@ -22,7 +22,7 @@ from PIL import Image, ImageOps
 
 from .. import inventory, prepare
 from ..cluster import cluster
-from ..config import DEFAULTS, Project
+from ..config import DEFAULTS, Project, geometry
 from ..palette import palette_from_entries, pick_entries, srgb_to_lab
 from ..quantize import assign, stats
 
@@ -205,7 +205,8 @@ class Workspace:
         q = DEFAULTS["quantize"] | q
         rec = self._img(iid)
         pal = palette_from_entries(inventory.normalize(entries))
-        idx = assign(rec["lab"], pal, q)
+        h, w = rec["lab"].shape[:2]
+        idx = assign(rec["lab"], pal, q, geometry(w, h)["mm_per_px"])  # as if plotted on the default sheet
         st = {s["code"]: s for s in stats(rec["lab"], idx, pal, 0.0)}
         return dict(labels=b64(idx), palette=[
             dict(nr=e["nr"], code=e["code"], name=e["name"], hex=e["hex"], share_pct=st[e["code"]]["share_pct"],

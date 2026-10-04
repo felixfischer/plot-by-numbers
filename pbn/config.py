@@ -19,12 +19,17 @@ DEFAULTS = {
         "dark_boost": 1.0,     # >1 spreads near-black, near-neutral pixels apart (dark photos)
         "dark_l": 35.0, "dark_span": 15.0, "dark_c": 28.0,
         "dark_only": [],       # palette codes only allowed where L* < dark_l
+        "filter_mm": 1.0,      # edge-aware smoothing radius (guided filter on the colour costs), 0 = off
+        "filter_eps": 0.02,    # edge threshold: larger = only stronger edges survive (≈ (ΔE/100)²)
     },
     "segment": {
         "min_area_mm2": 45.0,   # smaller regions are merged into a neighbour
         "max_regions": 280,
         "smooth_mm": 1.0,       # Gaussian sigma for boundary smoothing, 0 = off
         "max_area_mm2": 2500.0, # regions above this only swallow isolated specks
+        "contrast_de": 20.0,    # salience: a region this far (ΔE) from all neighbours counts 2× its area
+        "neck_mm": 1.5,         # cut spikes and bridges narrower than this, 0 = off
+        "min_width_mm": None,   # merge regions whose inscribed circle is smaller; default: too small for the number, 0 = off
     },
     "layout": {
         "margin_mm": 4.0,
@@ -46,6 +51,20 @@ DEFAULTS = {
 }
 
 
+def geometry(w_px: int, h_px: int, lay: dict = DEFAULTS["layout"], plot: dict = DEFAULTS["plotter"]) -> dict:
+    """Picture size on paper: as large as fits next to the legend, centred as one block."""
+    pw, ph = plot["width_mm"], plot["height_mm"]
+    area_w = pw - 2 * lay["margin_mm"] - lay["legend_width_mm"] - lay["gap_mm"]
+    area_h = ph - 2 * lay["margin_mm"]
+    img_w = min(area_w, area_h * w_px / h_px)
+    img_h = img_w * h_px / w_px
+    return dict(
+        img_w=img_w, img_h=img_h, mm_per_px=img_w / w_px,
+        x0=(pw - img_w - lay["gap_mm"] - lay["legend_width_mm"]) / 2,
+        y0=(ph - img_h) / 2,
+    )
+
+
 class Project:
     def __init__(self, toml_path: str | Path):
         self.path = Path(toml_path).resolve()
@@ -64,17 +83,7 @@ class Project:
         self.plot_w, self.plot_h = self.plot["width_mm"], self.plot["height_mm"]
 
     def geometry(self, w_px: int, h_px: int) -> dict:
-        """Picture size on paper: as large as fits next to the legend, centred as one block."""
-        L = self.lay
-        area_w = self.plot_w - 2 * L["margin_mm"] - L["legend_width_mm"] - L["gap_mm"]
-        area_h = self.plot_h - 2 * L["margin_mm"]
-        img_w = min(area_w, area_h * w_px / h_px)
-        img_h = img_w * h_px / w_px
-        return dict(
-            img_w=img_w, img_h=img_h, mm_per_px=img_w / w_px,
-            x0=(self.plot_w - img_w - L["gap_mm"] - L["legend_width_mm"]) / 2,
-            y0=(self.plot_h - img_h) / 2,
-        )
+        return geometry(w_px, h_px, self.lay, self.plot)
 
     def work_size(self) -> tuple[int, int]:
         """(W, H) of the prepared source image."""

@@ -98,6 +98,11 @@ def chaikin(pts: np.ndarray, closed: bool, iters: int = 3) -> np.ndarray:
     return pts
 
 
+def number_radius_mm(nr: int, h: float) -> float:
+    """Smallest inscribed-circle radius that fits the number at digit height h."""
+    return float(np.hypot(text_width(str(nr), h) / 2, h / 2) + CLEARANCE_MM)
+
+
 def digits(lab: np.ndarray, nr_of: np.ndarray, mm_per_px: float, h: float):
     placed, omitted = [], []
     for i, sl in enumerate(ndimage.find_objects(lab), start=1):
@@ -108,7 +113,7 @@ def digits(lab: np.ndarray, nr_of: np.ndarray, mm_per_px: float, h: float):
         s = str(nr_of[i - 1])
         pos = dict(region=i, nr=int(nr_of[i - 1]), x=float(sl[1].start + x - 1 + 0.5), y=float(sl[0].start + y - 1 + 0.5),
                    area_mm2=round(float((lab[sl] == i).sum() * mm_per_px**2), 1))
-        if np.hypot(text_width(s, h) / 2, h / 2) + CLEARANCE_MM <= r_mm:
+        if number_radius_mm(int(s), h) <= r_mm:
             placed.append(pos | dict(h_mm=h))
         else:
             omitted.append(pos | dict(r_mm=round(float(r_mm), 2)))
