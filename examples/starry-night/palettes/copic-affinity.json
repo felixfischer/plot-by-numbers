@@ -1,0 +1,112 @@
+[
+    {
+        "code": "Y15",
+        "name": "Cadmium Yellow",
+        "group": "Y",
+        "hex": "#ffe55b",
+        "rgb": [
+            255,
+            229,
+            91
+        ]
+    },
+    {
+        "code": "YR16",
+        "name": "Apricot",
+        "group": "YR",
+        "hex": "#f5ad1a",
+        "rgb": [
+            245,
+            173,
+            26
+        ]
+    },
+    {
+        "code": "E49",
+        "name": "Dark Bark",
+        "group": "E",
+        "hex": "#573e2d",
+        "rgb": [
+            87,
+            62,
+            45
+        ]
+    },
+    {
+        "code": "B18",
+        "name": "Lapis Lazuli",
+        "group": "B",
+        "hex": "#1f74b6",
+        "rgb": [
+            31,
+            116,
+            182
+        ]
+    },
+    {
+        "code": "BG05",
+        "name": "Holiday Blue",
+        "group": "BG",
+        "hex": "#85c9d9",
+        "rgb": [
+            133,
+            201,
+            217
+        ]
+    },
+    {
+        "code": "B99",
+        "name": "Agate",
+        "group": "B",
+        "hex": "#0b3c64",
+        "rgb": [
+            11,
+            60,
+            100
+        ]
+    },
+    {
+        "code": "B79",
+        "name": "Iris",
+        "group": "B",
+        "hex": "#272d7b",
+        "rgb": [
+            39,
+            45,
+            123
+        ]
+    },
+    {
+        "code": "G94",
+        "name": "Grayish Olive",
+        "group": "G",
+        "hex": "#909c71",
+        "rgb": [
+            144,
+            156,
+            113
+        ]
+    },
+    {
+        "code": "B95",
+        "name": "Light Grayish Cobalt",
+        "group": "B",
+        "hex": "#6c99b9",
+        "rgb": [
+            108,
+            153,
+            185
+        ]
+    },
+    {
+        "code": "T10",
+        "name": "Toner Gray No.10",
+        "group": "T",
+        "hex": "#282622",
+        "rgb": [
+            40,
+            38,
+            34
+        ]
+    }
+]

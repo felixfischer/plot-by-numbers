@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Palette</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            padding: 2rem;
+            line-height: 1.4;
+        }
+
+        header {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        p.subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .palette {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 1rem;
+            margin: 0 auto;
+        }
+
+        .color-block {
+            background: var(--card-bg);
+            padding: 0 0 1rem 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .color-block:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .color-block__cap {
+            width: 100%;
+            height: 5rem;
+            margin-bottom: 8px;
+        }
+
+        .color-block strong {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .color-block__name {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            min-height: 2.2em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 6px;
+            line-height: 1.2;
+        }
+
+        .color-block__hex {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.75rem;
+            color: #475569;
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Palette</h1>
+        <p class="subtitle">Choose a JSON file or pass <code>?src=path/to/palette.json</code></p>
+        <input type="file" accept=".json,application/json">
+    </header>
+    <main class="palette"></main>
+
+    <script>
+        const h1 = document.querySelector('h1');
+        const subtitle = document.querySelector('.subtitle');
+        const main = document.querySelector('main');
+
+        // "copic-sketch/copic-sketch-palette.json" -> "Copic Sketch Palette"
+        const titleFrom = path => path.split('/').pop().replace(/\.json$/i, '')
+            .split(/[-_\s]+/).map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+
+        function render(colors, path) {
+            const title = titleFrom(path);
+            document.title = h1.textContent = title;
+            subtitle.textContent = `${colors.length} colours`;
+            main.replaceChildren(...colors.map(c => {
+                const block = document.createElement('div');
+                block.className = 'color-block';
+                if (c.group) block.dataset.colorType = c.group;
+                const cap = document.createElement('div');
+                cap.className = 'color-block__cap';
+                cap.style.backgroundColor = c.hex;
+                const code = document.createElement('strong');
+                code.textContent = c.code;
+                const name = document.createElement('div');
+                name.className = 'color-block__name';
+                name.textContent = c.name;
+                const hex = document.createElement('div');
+                hex.className = 'color-block__hex';
+                hex.textContent = c.hex;
+                block.append(cap, code, name, hex);
+                return block;
+            }));
+        }
+
+        const fail = err => { subtitle.textContent = `Error: ${err.message}`; };
+
+        document.querySelector('input').addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (file) file.text().then(t => render(JSON.parse(t), file.name)).catch(fail);
+        });
+
+        // ponytail: fetch needs a local server (python3 -m http.server); file:// falls back to the file picker
+        const src = new URLSearchParams(location.search).get('src');
+        if (src) fetch(src).then(r => {
+            if (!r.ok) throw new Error(`${r.status} ${src}`);
+            return r.json();
+        }).then(colors => render(colors, src)).catch(fail);
+    </script>
+</body>
+
+</html>

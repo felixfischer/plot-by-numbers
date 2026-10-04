@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+.DS_Store
+# generated
+out/
+out-*/
+# experiment history and third-party source material (not redistributable)
+archive/
+palettes/raw/
+projects/

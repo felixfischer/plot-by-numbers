@@ -1,0 +1,4 @@
+numpy>=2.0
+scipy>=1.14
+pillow>=10.1
+pyserial>=3.5   # only for `send`

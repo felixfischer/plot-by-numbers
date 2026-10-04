@@ -1,0 +1,592 @@
+[
+  {
+    "code": "226",
+    "name": "Pastellgelb",
+    "hex": "#fff987",
+    "rgb": [
+      255,
+      249,
+      135
+    ]
+  },
+  {
+    "code": "205",
+    "name": "Zitronengelb (primär)",
+    "hex": "#fff203",
+    "rgb": [
+      255,
+      242,
+      3
+    ]
+  },
+  {
+    "code": "201",
+    "name": "Hellgelb",
+    "hex": "#fff64d",
+    "rgb": [
+      255,
+      246,
+      77
+    ]
+  },
+  {
+    "code": "233",
+    "name": "Chartreuse",
+    "hex": "#fde004",
+    "rgb": [
+      253,
+      224,
+      4
+    ]
+  },
+  {
+    "code": "202",
+    "name": "Dunkelgelb",
+    "hex": "#f89e12",
+    "rgb": [
+      248,
+      158,
+      18
+    ]
+  },
+  {
+    "code": "236",
+    "name": "Hellorange",
+    "hex": "#f58016",
+    "rgb": [
+      245,
+      128,
+      22
+    ]
+  },
+  {
+    "code": "237",
+    "name": "Dunkelorange",
+    "hex": "#f46f16",
+    "rgb": [
+      244,
+      111,
+      22
+    ]
+  },
+  {
+    "code": "381",
+    "name": "Pastellrot",
+    "hex": "#f796bb",
+    "rgb": [
+      247,
+      150,
+      187
+    ]
+  },
+  {
+    "code": "311",
+    "name": "Zinnober",
+    "hex": "#e42729",
+    "rgb": [
+      228,
+      39,
+      41
+    ]
+  },
+  {
+    "code": "334",
+    "name": "Scharlach",
+    "hex": "#ef2b42",
+    "rgb": [
+      239,
+      43,
+      66
+    ]
+  },
+  {
+    "code": "318",
+    "name": "Karmin",
+    "hex": "#ec0969",
+    "rgb": [
+      236,
+      9,
+      105
+    ]
+  },
+  {
+    "code": "390",
+    "name": "Pastellrosa",
+    "hex": "#fbcee9",
+    "rgb": [
+      251,
+      206,
+      233
+    ]
+  },
+  {
+    "code": "361",
+    "name": "Hellrosa",
+    "hex": "#ed1093",
+    "rgb": [
+      237,
+      16,
+      147
+    ]
+  },
+  {
+    "code": "337",
+    "name": "Magenta",
+    "hex": "#ec008c",
+    "rgb": [
+      236,
+      0,
+      140
+    ]
+  },
+  {
+    "code": "350",
+    "name": "Fuchsia",
+    "hex": "#d61c97",
+    "rgb": [
+      214,
+      28,
+      151
+    ]
+  },
+  {
+    "code": "545",
+    "name": "Rotviolett",
+    "hex": "#912b99",
+    "rgb": [
+      145,
+      43,
+      153
+    ]
+  },
+  {
+    "code": "579",
+    "name": "Pastellviolett",
+    "hex": "#fde3f2",
+    "rgb": [
+      253,
+      227,
+      242
+    ]
+  },
+  {
+    "code": "548",
+    "name": "Blauviolett",
+    "hex": "#782e99",
+    "rgb": [
+      120,
+      46,
+      153
+    ]
+  },
+  {
+    "code": "507",
+    "name": "Ultramarinviolett",
+    "hex": "#2b3c9a",
+    "rgb": [
+      43,
+      60,
+      154
+    ]
+  },
+  {
+    "code": "580",
+    "name": "Pastellblau",
+    "hex": "#88d9f8",
+    "rgb": [
+      136,
+      217,
+      248
+    ]
+  },
+  {
+    "code": "551",
+    "name": "Himmelblau hell",
+    "hex": "#12b2d4",
+    "rgb": [
+      18,
+      178,
+      212
+    ]
+  },
+  {
+    "code": "578",
+    "name": "Himmelblau (Zyan)",
+    "hex": "#00adef",
+    "rgb": [
+      0,
+      173,
+      239
+    ]
+  },
+  {
+    "code": "505",
+    "name": "Ultramarin hell",
+    "hex": "#4fb5ea",
+    "rgb": [
+      79,
+      181,
+      234
+    ]
+  },
+  {
+    "code": "506",
+    "name": "Ultramarin dunkel",
+    "hex": "#1c62b7",
+    "rgb": [
+      28,
+      98,
+      183
+    ]
+  },
+  {
+    "code": "508",
+    "name": "Preussischblau",
+    "hex": "#2c75b7",
+    "rgb": [
+      44,
+      117,
+      183
+    ]
+  },
+  {
+    "code": "533",
+    "name": "Indigo",
+    "hex": "#173a58",
+    "rgb": [
+      23,
+      58,
+      88
+    ]
+  },
+  {
+    "code": "522",
+    "name": "Türkisblau",
+    "hex": "#00accd",
+    "rgb": [
+      0,
+      172,
+      205
+    ]
+  },
+  {
+    "code": "640",
+    "name": "Blaugrün",
+    "hex": "#1ca4a7",
+    "rgb": [
+      28,
+      164,
+      167
+    ]
+  },
+  {
+    "code": "654",
+    "name": "Tannengrün",
+    "hex": "#0a9299",
+    "rgb": [
+      10,
+      146,
+      153
+    ]
+  },
+  {
+    "code": "661",
+    "name": "Türkisgrün",
+    "hex": "#2eb9ab",
+    "rgb": [
+      46,
+      185,
+      171
+    ]
+  },
+  {
+    "code": "666",
+    "name": "Pastellgrün",
+    "hex": "#b0e088",
+    "rgb": [
+      176,
+      224,
+      136
+    ]
+  },
+  {
+    "code": "601",
+    "name": "Hellgrün",
+    "hex": "#61c343",
+    "rgb": [
+      97,
+      195,
+      67
+    ]
+  },
+  {
+    "code": "600",
+    "name": "Grün",
+    "hex": "#39b851",
+    "rgb": [
+      57,
+      184,
+      81
+    ]
+  },
+  {
+    "code": "665",
+    "name": "Frühlingsgrün",
+    "hex": "#2eb44f",
+    "rgb": [
+      46,
+      180,
+      79
+    ]
+  },
+  {
+    "code": "676",
+    "name": "Grasgrün",
+    "hex": "#c3e128",
+    "rgb": [
+      195,
+      225,
+      40
+    ]
+  },
+  {
+    "code": "657",
+    "name": "Bronzegrün",
+    "hex": "#6d974b",
+    "rgb": [
+      109,
+      151,
+      75
+    ]
+  },
+  {
+    "code": "656",
+    "name": "Waldgrün",
+    "hex": "#0a9169",
+    "rgb": [
+      10,
+      145,
+      105
+    ]
+  },
+  {
+    "code": "602",
+    "name": "Dunkelgrün",
+    "hex": "#209680",
+    "rgb": [
+      32,
+      150,
+      128
+    ]
+  },
+  {
+    "code": "420",
+    "name": "Beige",
+    "hex": "#d5b295",
+    "rgb": [
+      213,
+      178,
+      149
+    ]
+  },
+  {
+    "code": "374",
+    "name": "Rosa beige",
+    "hex": "#f1b793",
+    "rgb": [
+      241,
+      183,
+      147
+    ]
+  },
+  {
+    "code": "258",
+    "name": "Aprikose",
+    "hex": "#f8a47d",
+    "rgb": [
+      248,
+      164,
+      125
+    ]
+  },
+  {
+    "code": "259",
+    "name": "Sandgelb",
+    "hex": "#fab10e",
+    "rgb": [
+      250,
+      177,
+      14
+    ]
+  },
+  {
+    "code": "231",
+    "name": "Goldocker",
+    "hex": "#f9b128",
+    "rgb": [
+      249,
+      177,
+      40
+    ]
+  },
+  {
+    "code": "227",
+    "name": "Gelber Ocker",
+    "hex": "#e19725",
+    "rgb": [
+      225,
+      151,
+      37
+    ]
+  },
+  {
+    "code": "245",
+    "name": "Safrangelb",
+    "hex": "#de701d",
+    "rgb": [
+      222,
+      112,
+      29
+    ]
+  },
+  {
+    "code": "407",
+    "name": "Dunkler Ocker",
+    "hex": "#e09824",
+    "rgb": [
+      224,
+      152,
+      36
+    ]
+  },
+  {
+    "code": "411",
+    "name": "Siena gebrannt",
+    "hex": "#c74624",
+    "rgb": [
+      199,
+      70,
+      36
+    ]
+  },
+  {
+    "code": "422",
+    "name": "Rotbraun",
+    "hex": "#96234a",
+    "rgb": [
+      150,
+      35,
+      74
+    ]
+  },
+  {
+    "code": "441",
+    "name": "Mahocani",
+    "hex": "#7a282e",
+    "rgb": [
+      122,
+      40,
+      46
+    ]
+  },
+  {
+    "code": "439",
+    "name": "Sepia hell",
+    "hex": "#eeb04c",
+    "rgb": [
+      238,
+      176,
+      76
+    ]
+  },
+  {
+    "code": "416",
+    "name": "Sepia",
+    "hex": "#86592e",
+    "rgb": [
+      134,
+      89,
+      46
+    ]
+  },
+  {
+    "code": "440",
+    "name": "Sepia dunkel",
+    "hex": "#412821",
+    "rgb": [
+      65,
+      40,
+      33
+    ]
+  },
+  {
+    "code": "728",
+    "name": "Warmgrau hell",
+    "hex": "#cec8bd",
+    "rgb": [
+      206,
+      200,
+      189
+    ]
+  },
+  {
+    "code": "738",
+    "name": "Kaltgrau hell",
+    "hex": "#c4caca",
+    "rgb": [
+      196,
+      202,
+      202
+    ]
+  },
+  {
+    "code": "704",
+    "name": "Grau",
+    "hex": "#a6aaa8",
+    "rgb": [
+      166,
+      170,
+      168
+    ]
+  },
+  {
+    "code": "717",
+    "name": "Kaltgrau",
+    "hex": "#4a4740",
+    "rgb": [
+      74,
+      71,
+      64
+    ]
+  },
+  {
+    "code": "718",
+    "name": "Warmgrau",
+    "hex": "#56523b",
+    "rgb": [
+      86,
+      82,
+      59
+    ]
+  },
+  {
+    "code": "706",
+    "name": "Dunkelgrau",
+    "hex": "#221e1d",
+    "rgb": [
+      34,
+      30,
+      29
+    ]
+  },
+  {
+    "code": "700",
+    "name": "Schwarz",
+    "hex": "#121722",
+    "rgb": [
+      18,
+      23,
+      34
+    ]
+  }
+]

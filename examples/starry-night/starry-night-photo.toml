@@ -1,0 +1,19 @@
+# Same painting, straight from the photo (Google Art Project scan, public domain).
+# The scan is tilted and has a cream border -> crop_scan; the dark cypress and village are
+# almost black -> dark_boost spreads them so BG78/W9 brush strokes survive.
+source = "source/Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg"
+palette = "palettes/copic-photo.json"
+out = "out-photo"
+aspect = 1.27137
+crop_scan = true
+
+[quantize]
+dark_boost = 2.5
+dark_only = ["BG78"]    # otherwise it grabs greenish sky strokes
+
+[layout]
+digit_height_mm = 2.0
+
+[plotter]
+width_mm = 403.95
+height_mm = 276.0

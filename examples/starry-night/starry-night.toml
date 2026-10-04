@@ -1,0 +1,17 @@
+# Van Gogh, The Starry Night (1889) – from a stylised vector tracing (Affinity Designer, 374 paths)
+# 10 Copic Sketch markers, A3 landscape on a Roland DXY-1200, everything drawn with one pencil.
+source = "source/starry-night-vectorized.svg"
+palette = "palettes/copic-affinity.json"   # made with: pick … palettes/copic-sketch.json 10 --fixed Y15,YR16,E49
+aspect = 1.27137                           # real canvas 93.7 × 73.7 cm (the SVG is 0.8 % narrower)
+svg_density = 84
+
+[segment]
+min_area_mm2 = 45
+max_regions = 280
+
+[layout]
+digit_height_mm = 2.0   # calib-test: 1.0–1.5 mm were not legible in pencil
+
+[plotter]               # Roland DXY-1200, A3 landscape, hard clip 0,0–16158,11040 PU
+width_mm = 403.95
+height_mm = 276.0

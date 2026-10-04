@@ -1,0 +1,112 @@
+[
+    {
+        "code": "Y15",
+        "name": "Cadmium Yellow",
+        "group": "Y",
+        "hex": "#ffe55b",
+        "rgb": [
+            255,
+            229,
+            91
+        ]
+    },
+    {
+        "code": "YG93",
+        "name": "Grayish Yellow",
+        "group": "YG",
+        "hex": "#d1cf8f",
+        "rgb": [
+            209,
+            207,
+            143
+        ]
+    },
+    {
+        "code": "B93",
+        "name": "Light Crockery Blue",
+        "group": "B",
+        "hex": "#97bcd3",
+        "rgb": [
+            151,
+            188,
+            211
+        ]
+    },
+    {
+        "code": "B66",
+        "name": "Clematis",
+        "group": "B",
+        "hex": "#6279b3",
+        "rgb": [
+            98,
+            121,
+            179
+        ]
+    },
+    {
+        "code": "B95",
+        "name": "Light Grayish Cobalt",
+        "group": "B",
+        "hex": "#6c99b9",
+        "rgb": [
+            108,
+            153,
+            185
+        ]
+    },
+    {
+        "code": "B69",
+        "name": "Stratospheric Blue",
+        "group": "B",
+        "hex": "#184992",
+        "rgb": [
+            24,
+            73,
+            146
+        ]
+    },
+    {
+        "code": "W9",
+        "name": "Warm Gray No.9",
+        "group": "W",
+        "hex": "#403d37",
+        "rgb": [
+            64,
+            61,
+            55
+        ]
+    },
+    {
+        "code": "B99",
+        "name": "Agate",
+        "group": "B",
+        "hex": "#0b3c64",
+        "rgb": [
+            11,
+            60,
+            100
+        ]
+    },
+    {
+        "code": "C10",
+        "name": "Cool Gray No.10",
+        "group": "C",
+        "hex": "#1c2225",
+        "rgb": [
+            28,
+            34,
+            37
+        ]
+    },
+    {
+        "code": "BG78",
+        "name": "Bronze",
+        "group": "BG",
+        "hex": "#3a5d54",
+        "rgb": [
+            58,
+            93,
+            84
+        ]
+    }
+]
