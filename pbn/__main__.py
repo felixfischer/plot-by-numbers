@@ -42,6 +42,12 @@ def main() -> None:
     w.add_argument("-o", "--out", type=Path)
     w.add_argument("--bw", action="store_true", help="no colour fills (toner-friendly)")
 
+    b = sub.add_parser("web", help="browser app: map image colours onto an inventory")
+    b.add_argument("--root", type=Path, default=Path("."), help="folder with palettes/ and projects/ (default: .)")
+    b.add_argument("--host", default="127.0.0.1")
+    b.add_argument("--port", type=int, default=8000)
+    b.add_argument("--open", action="store_true", help="open the browser")
+
     g = sub.add_parser("png", help="palette JSON -> PNG strip (one pixel per colour)")
     g.add_argument("palette", type=Path)
     g.add_argument("-o", "--out", type=Path, help="output PNG (default: the palette file with .png)")
@@ -66,6 +72,9 @@ def main() -> None:
         hpgl.send(a.file, a.port, a.baud)
     elif a.cmd == "swatch":
         swatch.run(a.inventory, a.out, a.bw)
+    elif a.cmd == "web":
+        from .web.app import serve  # starlette/uvicorn only needed here
+        serve(a.root, a.host, a.port, a.open)
     elif a.cmd == "png":
         palette_png.run(a.palette, a.out)
 

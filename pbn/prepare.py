@@ -61,18 +61,24 @@ def crop_scan(img: Image.Image) -> Image.Image:
     return img.crop((x0, y0, x1, y1))
 
 
+def render_svg(src, dst, W: int, aspect: float | None = None, density: int | None = None) -> int:
+    """Render an SVG at width W without antialiasing (ImageMagick 7); returns the height."""
+    nat_w, nat_h = map(int, subprocess.run(["magick", "identify", "-format", "%w %h", str(src)],
+                                           check=True, capture_output=True, text=True).stdout.split())
+    H = round(W / (aspect or nat_w / nat_h))
+    density = density or math.ceil(72 * max(W / nat_w, H / nat_h))
+    subprocess.run(["magick", "+antialias", "-density", str(density), str(src), "-background", "white",
+                    "-flatten", "-filter", "point", "-resize", f"{W}x{H}!", "-depth", "8", str(dst)], check=True)
+    return H
+
+
 def run(p) -> None:
     cfg = p.cfg
     W = cfg["work_width"]
     p.out.mkdir(parents=True, exist_ok=True)
     dst = p.out / "source.png"
     if p.source.suffix.lower() == ".svg":
-        nat_w, nat_h = map(int, subprocess.run(["magick", "identify", "-format", "%w %h", str(p.source)],
-                                               check=True, capture_output=True, text=True).stdout.split())
-        H = round(W / (cfg["aspect"] or nat_w / nat_h))
-        density = cfg["svg_density"] or math.ceil(72 * max(W / nat_w, H / nat_h))
-        subprocess.run(["magick", "+antialias", "-density", str(density), str(p.source), "-background", "white",
-                        "-flatten", "-filter", "point", "-resize", f"{W}x{H}!", "-depth", "8", str(dst)], check=True)
+        H = render_svg(p.source, dst, W, cfg["aspect"], cfg["svg_density"])
     else:
         img = Image.open(p.source).convert("RGB")
         if cfg["crop_scan"]:

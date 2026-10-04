@@ -46,36 +46,44 @@ def morph_open(idx: np.ndarray, n: int) -> np.ndarray:
     return out
 
 
-def run(p) -> None:
-    img = np.asarray(Image.open(p.out / "source.png").convert("RGB"))
-    mm2_per_px = p.geometry(img.shape[1], img.shape[0])["mm_per_px"] ** 2
-    q = p.q
-    lab = srgb_to_lab(img)
-    palette = load_palette(p.palette_path)
-    pal_lab = np.array([e["lab"] for e in palette])
-
+def assign(lab: np.ndarray, palette: list[dict], q: dict) -> np.ndarray:
+    """Lab image + palette (from palette_from_entries) -> palette index per pixel, denoised."""
     lab_q = boost_dark(lab, q)
+    pal_lab = np.array([e["lab"] for e in palette])
     dist = np.empty((*lab.shape[:2], len(palette)))
     for j, e in enumerate(palette):
         dL, da, db = (lab_q[..., c] - pal_lab[j, c] for c in range(3))
         dist[..., j] = dL * dL + q["chroma_weight"] * (da * da + db * db)
         if e["code"] in q["dark_only"]:
             dist[..., j][lab[..., 0] >= q["dark_l"]] = np.inf
-    idx = morph_open(majority_filter(dist.argmin(axis=-1)), len(palette))
+    return morph_open(majority_filter(dist.argmin(axis=-1)), len(palette))
+
+
+def stats(lab: np.ndarray, idx: np.ndarray, palette: list[dict], mm2_per_px: float) -> list[dict]:
+    """Per palette colour: share, area and the mean colour of its pixels; sorted by nr."""
+    out = []
+    for i, e in enumerate(palette):
+        mask = idx == i
+        mean = lab[mask].mean(axis=0) if mask.any() else e["lab"]
+        out.append(dict(nr=e["nr"], code=e["code"], name=e["name"], hex=e["hex"],
+                        hex_mean="#%02x%02x%02x" % tuple(lab_to_srgb(mean)) if mask.any() else "",
+                        share_pct=round(float(mask.mean() * 100), 2),
+                        area_mm2=round(float(mask.sum() * mm2_per_px))))
+    return sorted(out, key=lambda s: s["nr"])
+
+
+def run(p) -> None:
+    img = np.asarray(Image.open(p.out / "source.png").convert("RGB"))
+    mm2_per_px = p.geometry(img.shape[1], img.shape[0])["mm_per_px"] ** 2
+    lab = srgb_to_lab(img)
+    palette = load_palette(p.palette_path)
+    idx = assign(lab, palette, p.q)
 
     nr_of = np.array([e["nr"] for e in palette], np.uint8)
     Image.fromarray(nr_of[idx]).save(p.out / "labels.png")
 
-    stats, rgb_out = [], np.empty_like(img)
-    for i, e in enumerate(palette):
-        mask = idx == i
-        mean = lab[mask].mean(axis=0) if mask.any() else e["lab"]
-        stats.append(dict(nr=e["nr"], code=e["code"], name=e["name"], hex=e["hex"],
-                          hex_mean="#%02x%02x%02x" % tuple(lab_to_srgb(mean)) if mask.any() else "",
-                          share_pct=round(float(mask.mean() * 100), 2),
-                          area_mm2=round(float(mask.sum() * mm2_per_px))))
-        rgb_out[mask] = lab_to_srgb(e["lab"])
-    stats.sort(key=lambda s: s["nr"])
+    rgb_out = np.array([lab_to_srgb(e["lab"]) for e in palette])[idx]
+    st = stats(lab, idx, palette, mm2_per_px)
 
     h, w = idx.shape
     cmp = Image.new("RGB", (w * 2 + 12, h), (30, 30, 30))
@@ -84,7 +92,7 @@ def run(p) -> None:
     cmp.resize((cmp.width * 2 // 3, cmp.height * 2 // 3), Image.LANCZOS).save(p.out / "quantized_compare.png")
     print(f"  -> {p.out / 'quantized_compare.png'}")
     dump_json(p.out / "palette.json", dict(
-        palette=stats, note="nr = painting order (1 = lightest, 0 = paper white); "
-                            "hex_mean = average colour of the pixels mapped to it"))
-    for s in stats:
+        palette=st, note="nr = painting order (1 = lightest, 0 = paper white); "
+                         "hex_mean = average colour of the pixels mapped to it"))
+    for s in st:
         print(f"  {s['nr']:>2}. {s['code']:<5} {s['name']:<26} {s['hex']}  {s['share_pct']:5.2f} %  ({s['area_mm2']:6.0f} mm²)")

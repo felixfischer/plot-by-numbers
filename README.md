@@ -29,6 +29,7 @@ landscape on a Roland DXY-1200, about 4 minutes of plotting.
 | | |
 |---|---|
 | `pbn/` | The pipeline (Python, numpy/scipy/Pillow): prepare → quantize → segment → vectorize → layout → hpgl, plus `pick`, `calib`, `send` and `swatch` tools |
+| `pbn/web/` | Browser app for mapping a picture's colours onto an inventory (`python -m pbn web`) |
 | `palettes/` | Colour inventories of real products as JSON: **Copic Sketch** (350), **Stylefile Marker** (124), **Talens Ecoline** (59), **Artecho Acrylic** (48). `view.html` is a browser viewer for them |
 | `examples/starry-night/` | Two complete projects: a stylised vector tracing and the raw museum photo |
 
@@ -58,7 +59,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-`pyserial` is only needed for `send`.
+`pyserial` is only needed for `send`, `starlette` and `uvicorn` only for `web`.
 
 ## Quick start: the example
 
@@ -119,6 +120,39 @@ python -m pbn send projects/harbour/out/harbour.hpgl /dev/cu.usbserial-1130
 
 Then colour the sheet light to dark, following `color-reference.png`.
 
+## Web app: map colours visually
+
+```bash
+pip install starlette uvicorn
+python -m pbn web --open          # http://127.0.0.1:8000/
+```
+
+A browser front end for choosing the palette, in four steps:
+
+1. **Picture**: upload an image, or open a project from `examples/` or `projects/` (its
+   palette and `[quantize]` settings are loaded, the inventory is detected).
+2. **Inventory**: a built-in product line or your own upload (JSON like `palettes/*.json`,
+   CSV with `code,name,hex`, or a GIMP `.gpl`). Click colours you don't own to exclude them
+   from suggestions; this is remembered per inventory in the browser.
+3. **Mapping**: the picture is reduced to *n* image colours (k-means in CIELAB). Each one is
+   mapped to an inventory colour; image colours sharing an inventory colour make the palette
+   smaller.
+   - Select image colours in the list or by clicking the picture (Shift/Ctrl adds), then
+     click a candidate. Hovering a candidate previews it in the picture.
+   - Drag image colours onto a palette colour, or one palette colour onto another to merge.
+   - **Nearest** maps everything to the closest owned colour; **Auto-pick k** runs the same
+     k-medoids as `pick`, keeping pinned colours.
+   - **Plot preview** runs the real `quantize` step with the current palette. Hold Space for
+     the original, Ctrl+Z / Ctrl+Shift+Z to undo / redo.
+4. **Result**: palette in painting order with each colour's share of the plot. Download the
+   JSON, update the opened project's palette file, or create `projects/<name>/` with source,
+   `palette.json` and TOML, ready for `python -m pbn run`.
+
+Uploads and uploaded inventories are kept in `projects/.web/`. The server only listens on
+localhost by default. Code: [`pbn/web/`](pbn/web) (`workspace.py` for files and pipeline
+calls, `app.py` for the routes, `static/js/steps/` for one module per step), so later pipeline
+steps can be added as further steps.
+
 ## Commands
 
 ```text
@@ -127,6 +161,7 @@ python -m pbn pick   PROJECT.toml INVENTORY.json K [--fixed CODES] [-o OUT.json]
 python -m pbn calib  PROJECT.toml                            out/calib-test.hpgl
 python -m pbn send   FILE.hpgl PORT [--baud 9600]
 python -m pbn swatch INVENTORY.json [-o OUT.pdf] [--bw]      A4 swatch card
+python -m pbn web    [--root DIR] [--port 8000] [--open]     browser app (needs starlette, uvicorn)
 python -m pbn png    PALETTE.json [-o OUT.png]               palette as PNG strip (1 px per colour)
 ```
 
