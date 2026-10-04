@@ -3,8 +3,11 @@
 - boundaries on the pixel-corner grid: each edge between two regions exactly once
   (shared borders are drawn once). The picture edge is the frame (layout step).
 - trace chains between junctions (degree ≠ 2) and closed loops
-- smoothing: Douglas–Peucker (1 px) -> 3× Chaikin -> Douglas–Peucker (0.3 px); chain ends
-  stay fixed so boundaries meet exactly at junctions
+- smoothing: one smoothing spline over the whole boundary network – minimise
+  Σ |p − pixel boundary|² + λ Σ |second difference|², a sparse linear system. Wiggles shorter
+  than curve_mm are removed, longer shapes stay. Junctions are shared points and move with
+  their chains (no kinks); chain ends on the picture edge only slide along it.
+- Douglas–Peucker (0.3 px) to drop redundant points
 - number at the maximum of the distance transform; if it does not fit the inscribed
   circle at digit_height_mm it is listed as omitted (add it by hand)
 Output: out/vectors.json (px), out/regions.svg
@@ -19,6 +22,7 @@ from scipy import ndimage
 from .font import text_width
 
 CLEARANCE_MM = 0.3
+JOIN_MM = 0.6  # junctions closer than this (along their chain) become one crossing
 
 
 def edge_graph(lab: np.ndarray) -> dict[tuple[int, int], list[tuple[int, int]]]:
@@ -86,16 +90,77 @@ def dp(pts: np.ndarray, eps: float) -> np.ndarray:
     return pts[keep]
 
 
-def chaikin(pts: np.ndarray, closed: bool, iters: int = 3) -> np.ndarray:
-    for _ in range(iters):
-        p = pts[:-1] if closed else pts
-        q = np.roll(p, -1, axis=0) if closed else p[1:]
-        p = p if closed else p[:-1]
-        mid = np.empty((2 * len(p), 2))
-        mid[0::2] = 0.75 * p + 0.25 * q
-        mid[1::2] = 0.25 * p + 0.75 * q
-        pts = np.vstack([mid, mid[:1]]) if closed else np.vstack([pts[:1], mid, pts[-1:]])
-    return pts
+def join_close_junctions(chains: list[tuple[list, bool]], size: tuple[int, int], min_px: float):
+    """Chains shorter than min_px between two inner junctions are dropped and their ends joined,
+    so four regions that almost meet in a point get one clean crossing instead of a tiny bridge.
+    -> remaining chains, junction point -> representative point"""
+    W, H = size
+    parent: dict[tuple, tuple] = {}
+
+    def find(p):
+        while parent.get(p, p) != p:
+            p = parent[p]
+        return p
+
+    inner = lambda p: 0 < p[0] < W and 0 < p[1] < H
+    keep = []
+    for pts, closed in chains:
+        a, b = pts[0], pts[-1]
+        if not closed and len(pts) - 1 < min_px and a != b and inner(a) and inner(b):
+            parent[find(a)] = find(b)
+        else:
+            keep.append((pts, closed))
+    return keep, {p: find(p) for p in parent} | {find(p): find(p) for p in parent}
+
+
+def smooth_network(chains: list[tuple[list, bool]], size: tuple[int, int], wavelength_px: float,
+                   join: dict | None = None) -> list[np.ndarray]:
+    """Smoothing spline over all chains at once. Points are on a 1 px grid, so λ follows from
+    the cut-off wavelength L: the filter response 1 / (1 + λ (ωh)⁴) is ½ at ω = 2π / L.
+    join: junction point -> representative (joined junctions share one variable)."""
+    from scipy import sparse
+    from scipy.sparse.linalg import factorized
+
+    W, H = size
+    join = join or {}
+    lam = (wavelength_px / (2 * np.pi)) ** 4
+    var: dict[tuple, int] = {}  # junction / chain-end point -> variable, shared between chains
+    idx, rows = [], []          # per chain: variable indices; second-difference triples
+    n = 0
+    for pts, closed in chains:
+        if closed:
+            ii = list(range(n, n + len(pts) - 1))
+            n += len(ii)
+            rows += [(ii[k - 1], ii[k], ii[(k + 1) % len(ii)]) for k in range(len(ii))]
+            ii.append(ii[0])
+        else:
+            ii = []
+            for k, p in enumerate(pts):
+                if k in (0, len(pts) - 1):
+                    p = join.get(p, p)
+                    if p not in var:
+                        var[p], n = n, n + 1
+                    ii.append(var[p])
+                else:
+                    ii.append(n)
+                    n += 1
+            rows += [(ii[k - 1], ii[k], ii[k + 1]) for k in range(1, len(ii) - 1)]
+        idx.append(ii)
+    orig, cnt = np.zeros((n, 2)), np.zeros(n)
+    for (pts, _), ii in zip(chains, idx):
+        np.add.at(orig, ii, pts)  # a joined junction is fitted to the mean of its points
+        np.add.at(cnt, ii, 1)
+    orig /= cnt[:, None]
+
+    r = np.repeat(np.arange(len(rows)), 3)
+    D = sparse.csr_matrix((np.tile([1.0, -2.0, 1.0], len(rows)), (r, np.ravel(rows))), shape=(len(rows), n))
+    out = np.empty_like(orig)
+    for c, edge in ((0, W), (1, H)):
+        fixed = (orig[:, c] == 0) | (orig[:, c] == edge)  # on the picture edge: keep this coordinate
+        w = np.where(fixed, 1e8, 1.0)
+        solve = factorized((sparse.diags(w) + lam * (D.T @ D)).tocsc())
+        out[:, c] = solve(w * orig[:, c])
+    return [out[ii] for ii in idx]
 
 
 def number_radius_mm(nr: int, h: float) -> float:
@@ -126,10 +191,9 @@ def run(p) -> None:
     H, W = lab.shape
     mm_per_px = p.geometry(W, H)["mm_per_px"]
 
-    lines = []
-    for pts, closed in trace(edge_graph(lab)):
-        pl = dp(chaikin(dp(np.array(pts, float), 1.0), closed), 0.3)
-        lines.append(np.round(pl, 2).tolist())
+    chains, join = join_close_junctions(trace(edge_graph(lab)), (W, H), JOIN_MM / mm_per_px)
+    smooth = smooth_network(chains, (W, H), p.cfg["vectorize"]["curve_mm"] / mm_per_px, join)
+    lines = [np.round(dp(pl, 0.3), 2).tolist() for pl in smooth]
     placed, omitted = digits(lab, nr_of, mm_per_px, p.lay["digit_height_mm"])
     (p.out / "vectors.json").write_text(json.dumps(dict(size=[W, H], lines=lines, digits=placed, omitted=omitted)))
 

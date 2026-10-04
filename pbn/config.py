@@ -31,6 +31,9 @@ DEFAULTS = {
         "neck_mm": 1.5,         # cut spikes and bridges narrower than this, 0 = off
         "min_width_mm": None,   # merge regions whose inscribed circle is smaller; default: too small for the number, 0 = off
     },
+    "vectorize": {
+        "curve_mm": 3.0,        # boundary wiggles shorter than this wavelength are smoothed away
+    },
     "layout": {
         "margin_mm": 4.0,
         "legend_width_mm": 24.0,

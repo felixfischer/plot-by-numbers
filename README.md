@@ -45,7 +45,8 @@ Highlights:
   most alike, and a merged region takes the palette colour closest to its average picture
   colour. Small accents that stand out from everything around them (a star) are kept longer.
   Spikes and thin bridges are cut off, and regions too narrow for their number are merged.
-  Boundaries are smoothed, and shared borders are drawn once.
+  Shared borders are drawn once, as smooth curves: one smoothing spline over the whole
+  boundary network, so junctions don't kink and wiggles below `curve_mm` disappear.
 - **Numbers that fit.** Each number goes at the point of the region farthest from its
   border. If a region is still too small for its number (e.g. with `min_width_mm = 0`), it
   is listed so you can write the number in by hand.
@@ -176,7 +177,7 @@ python -m pbn png    PALETTE.json [-o OUT.png]               palette as PNG stri
 | `prepare` | Renders an SVG without antialiasing, or resizes a raster image. `crop_scan` straightens a photographed canvas and removes its border | `source.png` |
 | `quantize` | Maps each pixel to the cheapest palette colour in Lab after edge-aware smoothing of the colour costs (guided filter) | `labels.png`, `palette.json`, `quantized_compare.png` |
 | `segment` | Connected components, merging by size and colour similarity, boundary smoothing, neck cutting, minimum width | `regions.npz`, `regions.png` |
-| `vectorize` | Traces shared boundaries once, smooths them (Douglas–Peucker + Chaikin), places numbers | `vectors.json`, `regions.svg` |
+| `vectorize` | Traces shared boundaries once, smooths the whole boundary network with one smoothing spline (junctions included), places numbers | `vectors.json`, `regions.svg` |
 | `layout` | Sheet layout in mm with picture, legend, frame and corner marks | `layout.json`, `preview.svg/.png`, `preview_color.png`, `color-reference.png/.pdf` |
 | `hpgl` | Orders the paths, writes HPGL and checks it | `<name>.hpgl`, `report.md` |
 
@@ -214,6 +215,9 @@ contrast_de = 20.0      # a region this far (ΔE) from all its neighbours counts
 neck_mm = 1.5           # cut off spikes and bridges narrower than this, 0 = off
 min_width_mm = …        # merge narrower regions (inscribed circle); default: too narrow for
                         # the region's number at digit_height_mm, 0 = off
+
+[vectorize]
+curve_mm = 3.0          # boundary wiggles shorter than this wavelength are smoothed away
 
 [layout]
 margin_mm = 4.0
